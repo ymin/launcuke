@@ -1,5 +1,6 @@
-class Launcuke
-  def self.hi
-    puts "Hello world!"
-  end
-end
+require "launcuke/version"
+require "launcuke/runner"
+
+require 'fileutils'
+require 'builder'
+require 'nokogiri'
