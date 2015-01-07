@@ -1,5 +1,7 @@
 # Launcuke
 
+Forked from https://github.com/simcap/multicuke and changed the reports root folder.
+
 Run your cucumber test and generate a index html page to show all reports by feature.
 
 ## Installation

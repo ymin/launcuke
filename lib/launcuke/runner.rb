@@ -121,8 +121,7 @@ module Launcuke
       if dry_run
         0
       else
-
-        results = features_dirs.each { |features_dir|
+        results = features_dirs.forkoff!(:processes => forks_pool_size) { |features_dir|
             report_file_path = File.join(reports_path, "#{features_dir.dir_name}.html")
             feature_full_path = File.join(features_root_path, "#{features_dir.dir_name}")
             main_command = %W[bundle exec cucumber #{feature_full_path}]
@@ -134,9 +133,8 @@ module Launcuke
             result
         }
 
-
         global_exit_status = results.inject(0) { |acc, result|
-          result ? acc : acc +1
+          result ? acc : acc + 1
         }
         puts "Global exit status = #{global_exit_status}"
         global_exit_status
