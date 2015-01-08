@@ -89,9 +89,13 @@ module Launcuke
     # Delegate to a wrapper of system call in order mock/test
     attr_accessor :system_command
 
+    # Define the launch mode, parallel or sequential
+    attr_accessor :mode
+
     def initialize(features_root)
       @features_root_path = features_root
       @extra_options ||= []
+      @mode = @extra_options[2]? "#{@extra_options[2]}" : 'sequential'
       yield self if block_given?
 
       @dry_run = false if dry_run.nil?
@@ -108,7 +112,7 @@ module Launcuke
 
     def start
       FileUtils.mkdir_p reports_path
-      exit_status = launch_process_per_dir
+      exit_status = launch_process
       collect_results
       reports = ReportsIndex.new(reports_path, features_dirs).generate
       puts "See reports index at #{reports.index_path}" if reports
@@ -117,21 +121,36 @@ module Launcuke
 
     private
 
-    def launch_process_per_dir
+    def launch_process
       if dry_run
         0
       else
-        results = features_dirs.forkoff!(:processes => forks_pool_size) { |features_dir|
-            report_file_path = File.join(reports_path, "#{features_dir.dir_name}.html")
-            feature_full_path = File.join(features_root_path, "#{features_dir.dir_name}")
-            main_command = %W[bundle exec cucumber #{feature_full_path}]
-            options = %W[--format html --out #{report_file_path}]
-            options.concat %W[--require #{features_root_path}] if require_features_root_option
-            full_command = main_command + options + extra_options
-            result = system_command.run full_command
-            puts "Features '#{features_dir.dir_name.upcase}' finished. #{result ? 'SUCCESS' : 'FAILURE'} (pid: #{Process.pid})"
-            result
-        }
+        case @mode
+          when 'sequential'
+            results = features_dirs.each { |features_dir|
+              report_file_path = File.join(reports_path, "#{features_dir.dir_name}.html")
+              feature_full_path = File.join(features_root_path, "#{features_dir.dir_name}")
+              main_command = %W[bundle exec cucumber #{feature_full_path}]
+              options = %W[--format html --out #{report_file_path}]
+              options.concat %W[--require #{features_root_path}] if require_features_root_option
+              full_command = main_command + options + extra_options
+              result = system_command.run full_command
+              puts "Features '#{features_dir.dir_name.upcase}' finished. #{result ? 'SUCCESS' : 'FAILURE'} (pid: #{Process.pid})"
+              result
+            }
+          when 'parallel'
+            results = features_dirs.forkoff!(:processes => forks_pool_size) { |features_dir|
+              report_file_path = File.join(reports_path, "#{features_dir.dir_name}.html")
+              feature_full_path = File.join(features_root_path, "#{features_dir.dir_name}")
+              main_command = %W[bundle exec cucumber #{feature_full_path}]
+              options = %W[--format html --out #{report_file_path}]
+              options.concat %W[--require #{features_root_path}] if require_features_root_option
+              full_command = main_command + options + extra_options
+              result = system_command.run full_command
+              puts "Features '#{features_dir.dir_name.upcase}' finished. #{result ? 'SUCCESS' : 'FAILURE'} (pid: #{Process.pid})"
+              result
+            }
+        end
 
         global_exit_status = results.inject(0) { |acc, result|
           result ? acc : acc + 1
