@@ -22,7 +22,13 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+runner = Launcuke::Runner.new(features_root_path) do |r|
+  r.extra_options = ["-p", "#{platform}"]               #Run tests in sequential
+  # r.extra_options = ["-p", "#{platform}", "parallel"] #Run tests in parallel
+  r.require_features_root_option = false
+end
+
+runner.start
 
 ## Contributing
 
