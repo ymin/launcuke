@@ -129,7 +129,7 @@ module Launcuke
           when 'sequential'
             p "Running test in sequential"
             results = []
-            results = features_dirs.each { |features_dir|
+            features_dirs.each { |features_dir|
               report_file_path = File.join(reports_path, "#{features_dir.dir_name}.html")
               feature_full_path = File.join(features_root_path, "#{features_dir.dir_name}")
               main_command = %W[bundle exec cucumber #{feature_full_path}]
@@ -154,7 +154,7 @@ module Launcuke
               result
             }
         end
-
+        p results
         global_exit_status = results.inject(0) { |acc, result|
           result ? acc : acc + 1
         }
