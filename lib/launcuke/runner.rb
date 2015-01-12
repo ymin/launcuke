@@ -94,10 +94,10 @@ module Launcuke
 
     def initialize(features_root)
       @features_root_path = features_root
+      yield self if block_given?
       @extra_options ||= []
       @mode = @extra_options[2]? "#{@extra_options[2]}" : 'sequential'
-      yield self if block_given?
-
+      @extra_options.delete_at(2)
       @dry_run = false if dry_run.nil?
       @forks_pool_size ||= 5
       @require_features_root_option = true if require_features_root_option.nil?
@@ -127,6 +127,8 @@ module Launcuke
       else
         case @mode
           when 'sequential'
+            p "Running test in sequential"
+            results = []
             results = features_dirs.each { |features_dir|
               report_file_path = File.join(reports_path, "#{features_dir.dir_name}.html")
               feature_full_path = File.join(features_root_path, "#{features_dir.dir_name}")
@@ -136,9 +138,10 @@ module Launcuke
               full_command = main_command + options + extra_options
               result = system_command.run full_command
               puts "Features '#{features_dir.dir_name.upcase}' finished. #{result ? 'SUCCESS' : 'FAILURE'} (pid: #{Process.pid})"
-              result
+              results.push(result)
             }
           when 'parallel'
+            p "Running test in parallel"
             results = features_dirs.forkoff!(:processes => forks_pool_size) { |features_dir|
               report_file_path = File.join(reports_path, "#{features_dir.dir_name}.html")
               feature_full_path = File.join(features_root_path, "#{features_dir.dir_name}")
