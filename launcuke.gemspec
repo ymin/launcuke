@@ -3,7 +3,7 @@ require File.expand_path('../lib/launcuke/version', __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = 'launcuke'
-  s.date        = '2015-01-07'
+  s.date        = '2016-12-13'
   s.summary     = "Launch cuke!"
   s.description = "A simple cucumber runner gem"
   s.authors     = ["Yi MIN"]
