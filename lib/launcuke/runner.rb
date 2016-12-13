@@ -33,11 +33,15 @@ module Launcuke
     # True if a scenario or step has failed for this set of features
     attr_writer :failed
 
+    # Last test finished at 
+    attr_accessor :last_tested_time
+
     def initialize(directory_name)
       @dir_name = directory_name
       @failed = false
       @scenarios_results = ""
       @steps_results = ""
+      @last_tested_time = ""
     end
 
     # True if one feature has failed
@@ -92,6 +96,9 @@ module Launcuke
     # Define the launch mode, parallel or sequential
     attr_accessor :mode
 
+    # Define last launch time, display in index.html
+    attr_accessor :launch_time
+
     def initialize(features_root)
       @features_root_path = features_root
       yield self if block_given?
@@ -105,7 +112,7 @@ module Launcuke
       @output_path = File.expand_path("../reports", output_dir_name) unless output_path
       @excluded_dirs ||= []
       @included_only_dirs ||= []
-
+      @launch_time = Time.now.strftime('%Y-%m-%d %H:%M:%S')
       @reports_path = File.join(output_path, output_dir_name)
       @system_command ||= SystemCommand.new
     end
@@ -114,7 +121,7 @@ module Launcuke
       FileUtils.mkdir_p reports_path
       exit_status = launch_process
       collect_results
-      reports = ReportsIndex.new(reports_path, features_dirs).generate
+      reports = ReportsIndex.new(reports_path, features_dirs, @launch_time).generate
       puts "See reports index at #{reports.index_path}" if reports
       system_command.exit(exit_status)
     end
@@ -174,7 +181,7 @@ module Launcuke
           scenarios =  scenarios_match ? scenarios_match.captures.first : ""
           steps_match = content.match(/\d+ steps? \((.*?)\)/)
           steps =  steps_match ? steps_match.captures.first : ""
-
+          features_dir.last_tested_time = Time.now.strftime('%Y-%m-%d %H:%M:%S')
           features_dir.scenarios_results = scenarios
           features_dir.steps_results = steps
           features_dir.duration = duration

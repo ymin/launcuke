@@ -10,9 +10,10 @@ module Launcuke
     # Full path for the index html file
     attr_reader :index_path
 
-    def initialize(reports_path, features_dirs)
+    def initialize(reports_path, features_dirs, last_run_time)
       @features_dirs = features_dirs
       @index_path = File.join(reports_path, "index.html")
+      @last_run_time = last_run_time
     end
 
     def generate
@@ -26,12 +27,13 @@ module Launcuke
         }
         b.body {
           b.h2("Features")
+          b.h3("Last run time: #{@last_run_time}")
           b.ul {
             features_dirs.each { |features_dir|
                 b.li(:class => (features_dir.failed? ? "failed" : "success")) {
                   b.a(features_dir.human_name, :href => "#{features_dir.dir_name}.html")
                   b.span("[#{features_dir.duration}]", :class => "duration")
-                  b.span("Scenarios: #{features_dir.scenarios_results}, Steps: #{features_dir.steps_results}", :class => "result")
+                  b.span("Scenarios: #{features_dir.scenarios_results}, Steps: #{features_dir.steps_results}, Last tested time: #{features_dir.last_tested_time}", :class => "result")
                 }
             }
           }
